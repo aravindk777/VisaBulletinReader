@@ -1,10 +1,11 @@
 import configparser
 import os
-import unicodedata
 from datetime import datetime
-from bs4 import BeautifulSoup
+from io import StringIO
+
 import pandas as pd
 import requests
+from bs4 import BeautifulSoup
 from pandas import DataFrame
 
 config = configparser.ConfigParser()
@@ -16,7 +17,15 @@ def main():
     print(f"Current Year: {current_year} - Current Month: {current_month} | Required format: {current_month}-{current_year}")
     bulletin_url_base = config["SEARCH"]["BASE_URL_DOMAIN"] + config["SEARCH"]["BASE_URL"]
     bulletin_url = process_bulletin_url(bulletin_url_base)
-    read_bulletin_section(bulletin_url)
+
+    visa_type = input("Enter the visa type (Family- | Employment-) based: ")
+    visa_country = input(
+        "Enter the country for which you want to check the visa dates (INDIA|MEXICO|PHILIPINES|CHINA|OTHERS): ")
+    visa_dates = read_bulletin_section(bulletin_url, visa_type, visa_country)
+    if visa_dates is not None:
+        print(visa_dates)
+    else:
+        print(f"No data found for the {visa_type} visa type of '{visa_country}' country")
 
 def read_page(url: str):
     page_html = requests.get(url, verify=True)
@@ -28,7 +37,7 @@ def read_page(url: str):
 def get_bulletin_month_url(page: BeautifulSoup, search_text: str) -> str:
     h2_tag = page.select_one(f'h2:-soup-contains("{search_text}")')
     if h2_tag:
-        hyperlink = h2_tag.find_next('a')
+        hyperlink = h2_tag.find_next('a') if h2_tag.find_next('a').has_attr('href') else None
         if hyperlink is not None:
             print("Adjacent Hyperlink found:", hyperlink['href'], "hyperlink text:", hyperlink.text)
             return hyperlink['href']
@@ -36,7 +45,7 @@ def get_bulletin_month_url(page: BeautifulSoup, search_text: str) -> str:
 def process_bulletin_url(base_url: str):
     primary_page = read_page(base_url)
     href_to_bulletin = ""
-    if "Upcoming Visa Bulletin" in primary_page.text:
+    if "Upcoming Visa Bulletin" in primary_page.text :
         print("Found 'Upcoming Visa Bulletin'")
         href_to_bulletin = get_bulletin_month_url(primary_page, "Upcoming Visa Bulletin")
     
@@ -48,29 +57,48 @@ def process_bulletin_url(base_url: str):
     print("Bulletin URL:", href_to_bulletin)
     return href_to_bulletin
 
-def get_table_data(page: BeautifulSoup, search_text: str) -> DataFrame | None:
-    # page = page.text.replace(" ", " ")
-    dv_section_for_final_action_dates = page.find_all(string=search_text, recursive=True) # page.select_one(f'div:-soup-contains("{searchText}")')
+def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> DataFrame | None:
+    dv_section_for_final_action_dates = page.select(f'td:-soup-contains("{search_text}")')
     if dv_section_for_final_action_dates is None:
         return None
     else:
-        dv_section_for_final_action_dates = dv_section_for_final_action_dates.parent().next(limit=1)
-        
-    tbl_final_action_dates = dv_section_for_final_action_dates.find('table')
-    data = pd.DataFrame()
-    if tbl_final_action_dates:
-        data = pd.read_html(str(tbl_final_action_dates))[0]
-    
-    print(data)
-    return data
+        t1 = dv_section_for_final_action_dates[0].find_parent('table')
+        t1data = pd.read_html(StringIO(str(t1)))[0]
+        t1data.columns = t1data.iloc[0]
+        t1data.columns = t1data.columns.str.upper()
+        t1data = t1data[1:]
 
-def read_bulletin_section(bulletin_url: str):
+        t2 = dv_section_for_final_action_dates[1].find_parent('table')
+        t2data = pd.read_html(StringIO(str(t2)))[0]
+        t2data.columns = t2data.iloc[0]
+        t2data.columns = t2data.columns.str.upper()
+        t2data = t2data[1:]
+
+        final_result = t1data.iloc[:,[0]]
+        final_result.insert(1,"Dates For Filing Visa Applications", t2data[visa_country.upper()])
+        final_result.insert(2, "Final Action Dates for Sponsored Preference Cases", t1data[visa_country.upper()])
+
+        # final_result = DataFrame(
+        #    columns=[f"{search_text}Sponsored"], #, "Dates for Filing Visa Applications", "Final Action Dats for Sponsored Preference Cases"],
+        #    data=[t1data.iloc[:,[0]]] #, t1data[visa_country.upper()], t2data[visa_country.upper()]]
+        #)
+
+        print(final_result)
+
+        return final_result
+
+def read_bulletin_section(bulletin_url: str, visa_type: str, visa_country: str) -> DataFrame | None:
     bulletin_page = read_page(bulletin_url)
     # bulletin_page.text = unicodedata.normalize("NFKD", bulletin_page.text)
-    df_get_final_action_dates = get_table_data(bulletin_page, "FINAL ACTION DATES FOR EMPLOYMENT-BASED PREFERENCE CASES")
-    if df_get_final_action_dates is not None:
-        return df_get_final_action_dates
+
+    search_text = "Family-" if visa_type.upper() == "FAMILY" else "Employment-"
+    # read the family based statuses
+    df_visa_dates = get_table_data(bulletin_page, search_text, visa_country)
+    if df_visa_dates is not None:
+        print(f"{search_text} Dates found for {visa_country}")
+        return df_visa_dates
     else:
+        print(f"{search_text} Dates not found for {visa_country}")
         return None
 
 
