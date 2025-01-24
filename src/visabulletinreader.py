@@ -13,19 +13,30 @@ from bs4 import BeautifulSoup
 from pandas import DataFrame
 
 config = configparser.ConfigParser()
-config.read(os.path.join("src", "config.ini"))
+# config.read(os.path.join("src", "config.ini"))
+config.read("config.ini")
 
 
-def main():
-    """
-    Main function to execute the visa bulletin reader process.
-    """
+def get_visa_options():
+    visa_types = ["Family", "Employment"]
+    visa_countries = ["INDIA", "MEXICO", "PHILIPPINES", "CHINA", "OTHERS"]
+    return visa_types, visa_countries
+
+def init_reader() -> str:
     current_year = datetime.now().year
     current_month = datetime.now().strftime("%B")
     print(f"Current Year: {current_year} - Current Month: {current_month} "
           f"| Required format: {current_month}-{current_year}")
     bulletin_url_base = config["SEARCH"]["BASE_URL_DOMAIN"] + config["SEARCH"]["BASE_URL"]
     bulletin_url = process_bulletin_url(bulletin_url_base)
+    return bulletin_url
+
+def main():
+    """
+    Main function to execute the visa bulletin reader process.
+    """
+
+    bulletin_url = init_reader()
 
     visa_type = input("Enter the visa type (Family- | Employment-) based: ")
     visa_country = input(
@@ -119,13 +130,18 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
     t1data = pd.read_html(StringIO(str(t1)))[0]
     t1data.columns = t1data.iloc[0]
     t1data.columns = t1data.columns.str.upper()
+    t1data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip() for col in t1data.columns]
     t1data = t1data[1:]
 
     t2 = dv_section_for_final_action_dates[1].find_parent('table')
     t2data = pd.read_html(StringIO(str(t2)))[0]
     t2data.columns = t2data.iloc[0]
     t2data.columns = t2data.columns.str.upper()
+    t2data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip() for col in t2data.columns]
     t2data = t2data[1:]
+
+    if visa_country.upper() == "OTHERS":
+        visa_country = "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
 
     final_result = t1data.iloc[:, [0]]
     final_result.insert(1, "Dates For Filing Visa Applications",
