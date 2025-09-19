@@ -8,15 +8,7 @@ def index():
     visa_types, visa_countries = get_visa_options()
     return render_template('index.html', visa_types=visa_types, visa_countries=visa_countries, visa_dates=[])
 
-@app.route('/about')
-def about():
-    return 'About Visa Bulletin Reader'
-
-@app.route('/contact')
-def contact():
-    return 'built with love by @aravindk777!'
-
-@app.route('/get_bulletin', methods=['POST'])
+@app.route('/', methods=['POST'])
 def get_bulletin():
     visa_type = request.form['visa_type']
     visa_country = request.form['visa_country']

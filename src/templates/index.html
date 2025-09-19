@@ -5,76 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Visa Bulletin Reader app</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body {
+        background-color: #fff;
+        color: #212529;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #181a1b;
+          color: #f8f9fa;
+        }
+      }
+
+      .table {
+        background-color: inherit;
+        color: inherit;
+      }
+      .table th, .table td {
+        background-color: inherit !important;
+        color: inherit !important;
+      }
+    </style>
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">Visa Bulletin Reader</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <a class="nav-link" href="/">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/about">About</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="/contact">Contact</a>
-            </li>
-        </ul>
-    </div>
-</nav>
-<div class="container mt-5">
-    <h1 class="mb-4">Visa Bulletin Reader</h1>
-    <p>An app built with learning goal using Python and Flask, and also a purposeful app. This will retrieve the latest
-        Visa bulletin dates for below selections</p>
-    <form action="/get_bulletin" method="post">
-        <div class="form-group">
-            <label for="visa_type">Looking for Family or Employment visa dates? </label>
-            <select id="visa_type" name="visa_type" class="form-control" >
-                {% for type in visa_types %}
-                <option value="{{ type }}" {% if type == selected_visa_type %}selected{% endif %}>{{ type }}</option>
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-center">
+        <a class="navbar-brand mx-auto" href="/">Visa Bulletin Reader</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+    <div class="container mt-5">
+<!--        <h1 class="mb-4">Visa Bulletin Reader</h1>-->
+        <p>An app built with learning goal using Python and Flask, and also a purposeful app. This will retrieve the latest
+            Visa bulletin dates for below selections</p>
+        <form action="/" method="post" onload="this.form.submit()">
+            <div class="form-group">
+                <label for="visa_type">Looking for Family or Employment visa dates? </label>
+                <select id="visa_type" name="visa_type" class="form-control" onchange="this.form.submit()">
+                    {% for type in visa_types %}
+                    <option value="{{ type }}" {% if type == selected_visa_type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="visa_country">Which Country you'd want to see the important latest date announced?</label>
+                <select id="visa_country" name="visa_country" class="form-control" onchange="this.form.submit()">
+                    {% for country in visa_countries %}
+                    <option value="{{ country }}" {% if country == selected_visa_country %}selected{% endif %}>{{ country }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+<!--            <button type="submit" class="btn btn-primary">Get Bulletin</button>-->
+        </form>
+        <!--        <button type="submit" class="btn btn-primary">Get Bulletin</button>-->
+        <div class="mt-4">
+            <h4>Latest Visa Bulletin Dates</h4>
+            <table class="table">
+                <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th scope="col">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                </thead>
+                {% for row in visa_dates %}
+                <tbody>
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                </tr>
+                </tbody>
                 {% endfor %}
-            </select>
+            </table>
         </div>
-        <div class="form-group">
-            <label for="visa_country">Which Country you'd want to see the important latest date announced?</label>
-            <select id="visa_country" name="visa_country" class="form-control">
-                {% for country in visa_countries %}
-                <option value="{{ country }}" {% if country == selected_visa_country %}selected{% endif %}>{{ country }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Get Bulletin</button>
-    </form>
-    <!--        <button type="submit" class="btn btn-primary">Get Bulletin</button>-->
-    <div class="mt-4">
-        <h4>Latest Visa Bulletin Dates</h4>
-        <table class="table">
-            <thead>
-            <tr>
-                {% for header in headers %}
-                <th scope="col">{{ header }}</th>
-                {% endfor %}
-            </tr>
-            </thead>
-            {% for row in visa_dates %}
-            <tbody>
-            <tr>
-                <td>{{ row[0] }}</td>
-                <td>{{ row[1] }}</td>
-                <td>{{ row[2] }}</td>
-            </tr>
-            </tbody>
-            {% endfor %}
-        </table>
     </div>
-</div>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <footer class="bg-dark text-white text-center py-3 mt-auto">
+        <div class="container">
+            <p class="mb-0">&copy; Built with <span class="love" style="color: #e25555;">&#10084;&#65039;</span> by Aravind </p>
+        </div>
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
