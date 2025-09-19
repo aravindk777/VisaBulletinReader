@@ -3,7 +3,6 @@ Visa Bulletin Reader - a Python script to read the visa bulletin dates
 for the specified visa type and country.
 """
 import configparser
-import os
 from datetime import datetime
 from io import StringIO
 
@@ -161,10 +160,13 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
                         t1data[visa_country.upper()])
 
     # set the second and third column values datatype as date with format as DD-MMM-YYYY
-    final_result["Dates For Filing Visa Applications"] = (final_result["Dates For Filing Visa Applications"]
-                                                          .apply(lambda x: x
-                    if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
-                    else pd.to_datetime(x, format='%d%b%y', errors='coerce').strftime('%d-%b-%Y')))
+    final_result["Dates For Filing Visa Applications"] = \
+        (final_result["Dates For Filing Visa Applications"]
+         .apply(lambda x: x
+            if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
+            else pd.to_datetime(x, format='%d%b%y', errors='coerce').strftime('%d-%b-%Y')
+            )
+         )
 
     final_result["Final Action Dates for Sponsored Preference Cases"] = \
         (final_result["Final Action Dates for Sponsored Preference Cases"].apply(

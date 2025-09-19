@@ -1,3 +1,8 @@
+"""
+Visa Bulletin Reader - Web Application using Flask to read and display the visa bulletin dates
+for the specified visa type and country.
+"""
+
 from flask import Flask, render_template, request
 from visabulletinreader import get_visa_options, read_bulletin_section, init_reader
 
@@ -5,11 +10,22 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
+    """
+    Renders the index page with visa options.
+    :return: render_template: The index.html template with visa options.
+    """
     visa_types, visa_countries = get_visa_options()
-    return render_template('index.html', visa_types=visa_types, visa_countries=visa_countries, visa_dates=[])
+    return render_template(
+        'index.html',
+        visa_types=visa_types,
+        visa_countries=visa_countries, visa_dates=[])
 
 @app.route('/', methods=['POST'])
 def get_bulletin():
+    """
+    Handles the form submission to get visa bulletin dates.
+    :return: render_template: The index.html template with visa dates.
+    """
     visa_type = request.form['visa_type']
     visa_country = request.form['visa_country']
     bulletin_url = init_reader()
