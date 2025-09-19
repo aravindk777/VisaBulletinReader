@@ -3,7 +3,6 @@ Visa Bulletin Reader - a Python script to read the visa bulletin dates
 for the specified visa type and country.
 """
 import configparser
-import os
 from datetime import datetime
 from io import StringIO
 
@@ -18,11 +17,20 @@ config.read("config.ini")
 
 
 def get_visa_options():
+    """
+    Retrieves the visa types and countries for the user to select from.
+    :return: tuple: The visa types and countries.
+    """
     visa_types = ["Family", "Employment"]
     visa_countries = ["INDIA", "MEXICO", "PHILIPPINES", "CHINA", "OTHERS"]
     return visa_types, visa_countries
 
+
 def init_reader() -> str:
+    """
+    Initializes the visa bulletin reader process.
+    :return: The URL of the visa bulletin.
+    """
     current_year = datetime.now().year
     current_month = datetime.now().strftime("%B")
     print(f"Current Year: {current_year} - Current Month: {current_month} "
@@ -130,14 +138,16 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
     t1data = pd.read_html(StringIO(str(t1)))[0]
     t1data.columns = t1data.iloc[0]
     t1data.columns = t1data.columns.str.upper()
-    t1data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip() for col in t1data.columns]
+    t1data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip()
+                      for col in t1data.columns]
     t1data = t1data[1:]
 
     t2 = dv_section_for_final_action_dates[1].find_parent('table')
     t2data = pd.read_html(StringIO(str(t2)))[0]
     t2data.columns = t2data.iloc[0]
     t2data.columns = t2data.columns.str.upper()
-    t2data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip() for col in t2data.columns]
+    t2data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip()
+                      for col in t2data.columns]
     t2data = t2data[1:]
 
     if visa_country.upper() == "OTHERS":
@@ -148,6 +158,21 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
                         t2data[visa_country.upper()])
     final_result.insert(2, "Final Action Dates for Sponsored Preference Cases",
                         t1data[visa_country.upper()])
+
+    # set the second and third column values datatype as date with format as DD-MMM-YYYY
+    final_result["Dates For Filing Visa Applications"] = \
+        (final_result["Dates For Filing Visa Applications"]
+         .apply(lambda x: x
+            if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
+            else pd.to_datetime(x, format='%d%b%y', errors='coerce').strftime('%d-%b-%Y')
+            )
+         )
+
+    final_result["Final Action Dates for Sponsored Preference Cases"] = \
+        (final_result["Final Action Dates for Sponsored Preference Cases"].apply(
+        lambda x: x if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
+        else pd.to_datetime(x, format='%d%b%y', errors='coerce')
+        .strftime('%d-%b-%Y')))
 
     print(final_result)
     return final_result
