@@ -11,6 +11,8 @@ import requests
 from bs4 import BeautifulSoup
 from pandas import DataFrame
 
+from helpers.timed_cache import timed_lru_cache
+
 config = configparser.ConfigParser()
 # config.read(os.path.join("src", "config.ini"))
 config.read("config.ini")
@@ -56,7 +58,7 @@ def main():
     else:
         print(f"No data found for the {visa_type} visa type of '{visa_country}' country")
 
-
+@timed_lru_cache(seconds=3600, maxsize=32)
 def read_page(url: str):
     """
     Reads the HTML content of the given URL and returns a BeautifulSoup object.
@@ -117,7 +119,7 @@ def process_bulletin_url(base_url: str):
     print("Bulletin URL:", href_to_bulletin)
     return href_to_bulletin
 
-
+@timed_lru_cache(seconds=60*60*24, maxsize=32)
 def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> DataFrame | None:
     """
     Extracts the visa bulletin table data for the specified visa type and country.
@@ -160,7 +162,7 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
                         t1data[visa_country.upper()])
 
     # set the second and third column values datatype as date with format as DD-MMM-YYYY
-    final_result["Dates For Filing Visa Applications"] = \
+    final_result.loc[:, "Dates For Filing Visa Applications"] = \
         (final_result["Dates For Filing Visa Applications"]
          .apply(lambda x: x
             if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
@@ -168,7 +170,7 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
             )
          )
 
-    final_result["Final Action Dates for Sponsored Preference Cases"] = \
+    final_result.loc[:, "Final Action Dates for Sponsored Preference Cases"] = \
         (final_result["Final Action Dates for Sponsored Preference Cases"].apply(
         lambda x: x if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
         else pd.to_datetime(x, format='%d%b%y', errors='coerce')
@@ -177,7 +179,7 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
     print(final_result)
     return final_result
 
-
+@timed_lru_cache(seconds=60*60*24, maxsize=32)
 def read_bulletin_section(bulletin_url: str, visa_type: str, visa_country: str) -> DataFrame | None:
     """
     Reads the visa bulletin section for the specified visa type and country.
