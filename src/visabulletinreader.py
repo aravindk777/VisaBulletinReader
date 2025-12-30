@@ -205,5 +205,5 @@ def read_bulletin_section(bulletin_url: str, visa_type: str, visa_country: str) 
     return None
 
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()

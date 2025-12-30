@@ -41,4 +41,4 @@ def get_bulletin():
                            visa_dates=visa_dates.values.tolist() if visa_dates is not None else [])
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
