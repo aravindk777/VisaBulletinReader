@@ -3,6 +3,7 @@ Visa Bulletin Reader - a Python script to read the visa bulletin dates
 for the specified visa type and country.
 """
 import configparser
+import os
 from datetime import datetime
 from io import StringIO
 
@@ -14,8 +15,8 @@ from pandas import DataFrame
 from src.helpers.timed_cache import timed_lru_cache
 
 config = configparser.ConfigParser()
-# config.read(os.path.join("src", "config.ini"))
-config.read("config.ini")
+config.read(os.path.join("src", "config.ini"))
+# config.read("config.ini")
 
 
 def get_visa_options():
