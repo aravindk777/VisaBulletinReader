@@ -1,7 +1,7 @@
 """
 Unit tests for visabulletinreader module
 """
-from .visabulletinreader import get_visa_options, read_page
+from visabulletinreader import get_visa_options, read_page
 
 
 def test_get_visa_options():

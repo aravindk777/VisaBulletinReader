@@ -11,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 from pandas import DataFrame
 
-from .helpers.timed_cache import timed_lru_cache
+from helpers.timed_cache import timed_lru_cache
 
 config = configparser.ConfigParser()
 # config.read(os.path.join("src", "config.ini"))
