@@ -3,7 +3,6 @@ Visa Bulletin Reader - a Python script to read the visa bulletin dates
 for the specified visa type and country.
 """
 import configparser
-import os
 from datetime import datetime
 from io import StringIO
 
