@@ -8,6 +8,13 @@ from visabulletinreader import get_visa_options, read_bulletin_section, init_rea
 
 app = Flask(__name__)
 
+@app.route('/health', methods=['GET'])
+def health():
+    """
+    Quick health check page
+    """
+    return "<b>Healthy</b><br/><h2>--Simple healthcheck page</h2>"
+
 @app.route('/')
 def index():
     """
