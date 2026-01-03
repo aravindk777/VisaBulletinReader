@@ -40,5 +40,5 @@ def get_bulletin():
                            headers = visa_dates.columns.tolist() if visa_dates is not None else [],
                            visa_dates=visa_dates.values.tolist() if visa_dates is not None else [])
 
-# if __name__ == "__main__":
-app.run(host="0.0.0.0")
+if __name__ == "__main__":
+    app.run(debug=True)
