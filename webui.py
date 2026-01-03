@@ -4,7 +4,7 @@ for the specified visa type and country.
 """
 
 from flask import Flask, render_template, request
-from src.visabulletinreader import get_visa_options, read_bulletin_section, init_reader
+from visabulletinreader import get_visa_options, read_bulletin_section, init_reader
 
 app = Flask(__name__)
 
