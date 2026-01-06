@@ -1,0 +1,13 @@
+[MASTER]
+# Add <directory> to the sys.path.
+init-hook='import sys; sys.path.append(".")'
+
+[MAIN]
+# List of module names for which member attributes should not be checked
+# (useful for modules/projects where namespaces are manipulated during runtime
+# and thus existing member attributes cannot be deduced by static analysis. It
+# supports qualified module names, as well as Unix pattern matching.
+ignored-modules=
+
+# Show the source as roots of the project
+source-roots=.

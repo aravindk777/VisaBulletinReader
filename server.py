@@ -15,6 +15,20 @@ def health():
     """
     return "<b>Healthy</b><br/><h2>--Simple healthcheck page</h2>"
 
+@app.route('/about')
+def about():
+    """
+    Renders the about page.
+    """
+    return render_template('about.html')
+
+@app.route('/references')
+def references():
+    """
+    Renders the references page.
+    """
+    return render_template('references.html')
+
 @app.route('/')
 def index():
     """
@@ -22,10 +36,16 @@ def index():
     :return: render_template: The index.html template with visa options.
     """
     visa_types, visa_countries = get_visa_options()
+    bulletin_url, title = init_reader()
+    visa_dates = read_bulletin_section(bulletin_url, visa_types[0], visa_countries[0])
     return render_template(
         'index.html',
+        bulletin_url=bulletin_url,
+        bulletin_src=title,
         visa_types=visa_types,
-        visa_countries=visa_countries, visa_dates=[])
+        visa_countries=visa_countries,
+        headers=visa_dates.columns.tolist() if visa_dates is not None else [],
+        visa_dates=visa_dates.values.tolist() if visa_dates is not None else [])
 
 @app.route('/', methods=['POST'])
 def get_bulletin():
@@ -35,11 +55,13 @@ def get_bulletin():
     """
     visa_type = request.form['visa_type']
     visa_country = request.form['visa_country']
-    bulletin_url = init_reader()
+    bulletin_url, title = init_reader()
     visa_types, visa_countries = get_visa_options()
     visa_dates = read_bulletin_section(bulletin_url, visa_type, visa_country)
     print(visa_dates)
     return render_template('index.html',
+                           bulletin_url=bulletin_url,
+                           bulletin_src=title,
                            visa_types=visa_types,
                            selected_visa_type=visa_type,
                            visa_countries=visa_countries,
