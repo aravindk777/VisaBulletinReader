@@ -28,7 +28,7 @@ def get_visa_options():
     return visa_types, visa_countries
 
 
-def init_reader() -> str:
+def init_reader() -> tuple:
     """
     Initializes the visa bulletin reader process.
     :return: The URL of the visa bulletin.
@@ -38,8 +38,8 @@ def init_reader() -> str:
     print(f"Current Year: {current_year} - Current Month: {current_month} "
           f"| Required format: {current_month}-{current_year}")
     bulletin_url_base = config["SEARCH"]["BASE_URL_DOMAIN"] + config["SEARCH"]["BASE_URL"]
-    bulletin_url = process_bulletin_url(bulletin_url_base)
-    return bulletin_url
+    bulletin_url, title = process_bulletin_url(bulletin_url_base)
+    return bulletin_url, title
 
 def main():
     """
@@ -75,7 +75,7 @@ def read_page(url: str):
     return soup
 
 
-def get_bulletin_month_url(page: BeautifulSoup, search_text: str) -> str:
+def get_bulletin_month_url(page: BeautifulSoup, search_text: str) -> tuple:
     """
     Retrieves the URL for the visa bulletin month based on the search text.
 
@@ -84,15 +84,15 @@ def get_bulletin_month_url(page: BeautifulSoup, search_text: str) -> str:
         search_text (str): The text to search for in the page.
 
     Returns:
-        str: The URL of the bulletin month.
+        tuple: The URL of the bulletin month and the link text.
     """
     h2_tag = page.select_one(f'h2:-soup-contains("{search_text}")')
     if h2_tag:
         hyperlink = h2_tag.find_next('a') if h2_tag.find_next('a').has_attr('href') else None
         if hyperlink is not None:
             print("Adjacent Hyperlink found:", hyperlink['href'], "hyperlink text:", hyperlink.text)
-            return hyperlink['href']
-    return ""
+            return hyperlink['href'], hyperlink.text
+    return "", ""
 
 
 def process_bulletin_url(base_url: str):
@@ -107,17 +107,18 @@ def process_bulletin_url(base_url: str):
     """
     primary_page = read_page(base_url)
     href_to_bulletin = ""
+    link_name = None
     if "Upcoming Visa Bulletin" in primary_page.text:
         print("Found 'Upcoming Visa Bulletin'")
-        href_to_bulletin = get_bulletin_month_url(primary_page, "Upcoming Visa Bulletin")
+        href_to_bulletin, link_name = get_bulletin_month_url(primary_page, "Upcoming Visa Bulletin")
 
     if href_to_bulletin is None or href_to_bulletin == "":
         print("Upcoming Visa Bulletin not found")
-        href_to_bulletin = get_bulletin_month_url(primary_page, "Current Visa Bulletin")
+        href_to_bulletin, link_name = get_bulletin_month_url(primary_page, "Current Visa Bulletin")
 
     href_to_bulletin = config["SEARCH"]["BASE_URL_DOMAIN"] + href_to_bulletin
-    print("Bulletin URL:", href_to_bulletin)
-    return href_to_bulletin
+    print("Bulletin URL:", href_to_bulletin, "Title: ", link_name)
+    return href_to_bulletin, link_name
 
 @timed_lru_cache(seconds=60*60*24, maxsize=32)
 def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> DataFrame | None:
@@ -192,9 +193,12 @@ def read_bulletin_section(bulletin_url: str, visa_type: str, visa_country: str) 
     Returns:
         DataFrame | None: The extracted visa dates or None if not found.
     """
+    print(f'Fetching visa dates for country: {visa_country} '
+          f'| Type: {visa_type} '
+          f'| Bulletin URL: {bulletin_url}')
     bulletin_page = read_page(bulletin_url)
     search_text = "Family-" if visa_type.upper() == "FAMILY" else "Employment-"
-    # read the family based statuses
+    # read the family-based statuses
     df_visa_dates = get_table_data(bulletin_page, search_text, visa_country)
 
     if df_visa_dates is not None:

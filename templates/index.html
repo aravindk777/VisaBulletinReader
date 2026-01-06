@@ -34,11 +34,23 @@
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/about">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/references">References links</a>
+                </li>
+            </ul>
+        </div>
     </nav>
     <div class="container mt-5">
 <!--        <h1 class="mb-4">Visa Bulletin Reader</h1>-->
-        <p>An app built with learning goal using Python and Flask, and also a purposeful app. This will retrieve the latest
-            Visa bulletin dates for below selections</p>
+        <p>Currently reading the latest Visa bulletin dates for <a href="{{ bulletin_url }}" target="_blank" class="active">{{ bulletin_src }}</a></p>
         <form action="/" method="post" onload="this.form.submit()">
             <div class="form-group">
                 <label for="visa_type">Looking for Family or Employment visa dates? </label>
