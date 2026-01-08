@@ -1,19 +1,16 @@
 # Visa Bulletin Reader
-This is a simple web scraper to get the latest visa bulletin information from the [travel.state.gov](https://travel.state.gov/) website. I started this with a goal of learning python and web scrapping capabilities.
+This is a simple web scraper to get the latest visa bulletin information from the [travel.state.gov](https://travel.state.gov/) website. I started this with a goal of learning python and web scrapping capabilities. Apparently, created a web app to display the information in a more user-friendly and intuitive way. 
 
-## Goal/Outcome
-- To get the latest visa bulletin information from the travel.state.gov website.
-- Currently built as a command line tool, with prompt to select the visa bulletin type and country.
-- Future goal is to build a web application to display the information in a more user friendly way.
+## Features and Goals
+☑️ To get the latest visa bulletin information from the travel.state.gov website.
 
-## Tech Requirement Primers
+⏳ Subscription feature to get the subscribers notified of date change from the time they subscribed and every time the bulletin date changes.
 
-- Find the section "recent_bulletins" from ul type.
-- Look for tags with "Upcoming Visa Bulletin" and if not found/available, then go for "Current Visa Bulletin".
-- Navigate or find the link with the format as
-  - https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/{currentYear}/visa-bulletin-for-{wildcard}-{currentYear}.html
+⏳ Save the dates to a datastore for future enhancements, like predictions and analysis.
 
-### Finding the information required
 
-- Find the table type occurrences
-  - Pick first 2 and render the data
+## Technologies Used
+Python, Flask, HTML, CSS
+
+## Libraries Used
+BeautifulSoup4, Flask, Requests with Python3
