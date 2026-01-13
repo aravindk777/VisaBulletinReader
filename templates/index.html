@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visa Bulletin Reader app</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-      body {
-        background-color: #fff;
-        color: #212529;
-      }
-      @media (prefers-color-scheme: dark) {
-        body {
-          background-color: #181a1b;
-          color: #f8f9fa;
-        }
-      }
+{% extends "base.html" %}
 
+{% block title %}Visa Bulletin Reader app{% endblock %}
+
+{% block extra_styles %}
       .table {
         background-color: inherit;
         color: inherit;
@@ -25,48 +11,34 @@
         background-color: inherit !important;
         color: inherit !important;
       }
-    </style>
-</head>
-<body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-center">
-        <a class="navbar-brand mx-auto" href="/">Visa Bulletin Reader</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="/">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/about">About</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/references">References links</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <div class="container mt-5">
+      .table tr:hover {
+        border-bottom: 1px solid #dee2e6;
+        background-color: lightyellow;
+        color: black;
+      }
+{% endblock %}
+
+{% block content %}
 <!--        <h1 class="mb-4">Visa Bulletin Reader</h1>-->
         <p>Currently reading the latest Visa bulletin dates for <a href="{{ bulletin_url }}" target="_blank" class="active">{{ bulletin_src }}</a></p>
         <form action="/" method="post" onload="this.form.submit()">
-            <div class="form-group">
-                <label for="visa_type">Looking for Family or Employment visa dates? </label>
-                <select id="visa_type" name="visa_type" class="form-control" onchange="this.form.submit()">
-                    {% for type in visa_types %}
-                    <option value="{{ type }}" {% if type == selected_visa_type %}selected{% endif %}>{{ type }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="visa_country">Which Country you'd want to see the important latest date announced?</label>
-                <select id="visa_country" name="visa_country" class="form-control" onchange="this.form.submit()">
-                    {% for country in visa_countries %}
-                    <option value="{{ country }}" {% if country == selected_visa_country %}selected{% endif %}>{{ country }}</option>
-                    {% endfor %}
-                </select>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="visa_type">Looking for Family or Employment visa dates? </label>
+                    <select id="visa_type" name="visa_type" class="form-control" onchange="this.form.submit()">
+                        {% for type in visa_types %}
+                        <option value="{{ type }}" {% if type == selected_visa_type %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="visa_country">Country you're interested in to see?</label>
+                    <select id="visa_country" name="visa_country" class="form-control" onchange="this.form.submit()">
+                        {% for country in visa_countries %}
+                        <option value="{{ country }}" {% if country == selected_visa_country %}selected{% endif %}>{{ country }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
 <!--            <button type="submit" class="btn btn-primary">Get Bulletin</button>-->
         </form>
@@ -92,14 +64,4 @@
                 {% endfor %}
             </table>
         </div>
-    </div>
-    <footer class="bg-dark text-white text-center py-3 mt-auto">
-        <div class="container">
-            <p class="mb-0">&copy; Built with <span class="love" style="color: #e25555;">&#10084;&#65039;</span> using Flask.<br/>Have feedback? <a href="https://github.com/aravindk777/VisaBulletinReader/issues/new/choose" target="_blank" class="link-active">Add yours here</a></p>
-        </div>
-    </footer>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+{% endblock %}
