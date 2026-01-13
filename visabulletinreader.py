@@ -120,6 +120,38 @@ def process_bulletin_url(base_url: str):
     print("Bulletin URL:", href_to_bulletin, "Title: ", link_name)
     return href_to_bulletin, link_name
 
+
+def _process_html_table(table_tag) -> DataFrame:
+    """
+    Processes an HTML table tag and returns a DataFrame with cleaned column names and rows.
+
+    Args:
+        table_tag (BeautifulSoup): The HTML table tag to process.
+
+    Returns:
+        DataFrame: Processed DataFrame with cleaned column names and rows.
+    """
+    data = pd.read_html(StringIO(str(table_tag)))[0]
+    data.columns = data.iloc[0].str.upper()
+    data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip()
+                    for col in data.columns]
+    return data[1:].copy()
+
+
+def _format_date_string(date_val):
+    """
+    Formats a date string to the format 'DD-MMM-YYYY'.
+
+    Args:
+        date_val (str): The date string to format.
+
+    Returns:
+        str: The formatted date string or the original string if parsing fails.
+    """
+    parsed = pd.to_datetime(date_val, format='%d%b%y', errors='coerce')
+    return date_val if parsed is pd.NaT else parsed.strftime('%d-%b-%Y')
+
+
 @timed_lru_cache(seconds=60*60*24, maxsize=32)
 def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> DataFrame | None:
     """
@@ -136,65 +168,38 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
     dv_section_for_final_action_dates = page.select(f'td:-soup-contains("{search_text}")')
     if dv_section_for_final_action_dates is None:
         return None
+    if not dv_section_for_final_action_dates or len(dv_section_for_final_action_dates) < 2:
+        return None
 
-    t1 = dv_section_for_final_action_dates[0].find_parent('table')
-    t1data = pd.read_html(StringIO(str(t1)))[0]
-    t1data.columns = t1data.iloc[0]
-    t1data.columns = t1data.columns.str.upper()
-    t1data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip()
-                      for col in t1data.columns]
-    t1data = t1data[1:]
+    t1data = _process_html_table(dv_section_for_final_action_dates[0].find_parent('table'))
+    t2data = _process_html_table(dv_section_for_final_action_dates[1].find_parent('table'))
 
-    t2 = dv_section_for_final_action_dates[1].find_parent('table')
-    t2data = pd.read_html(StringIO(str(t2)))[0]
-    t2data.columns = t2data.iloc[0]
-    t2data.columns = t2data.columns.str.upper()
-    t2data.columns = [col.replace('MAINLAND BORN', '').replace('-', '').strip()
-                      for col in t2data.columns]
-    t2data = t2data[1:]
+    visa_col_name_t1 = visa_country.upper()
+    visa_col_name_t2 = visa_country.upper()
 
     if visa_country.upper() == "OTHERS":
-        # find a column in both t1 and t2 data that starts with "ALL CHARGEABILITY"
-        match_col_t1 = next(
-            (col for col in t1data.columns if str(col).upper().startswith("ALL CHARGEABILITY")),
-            None
-        )
-        match_col_t2 = next(
-            (col for col in t2data.columns if str(col).upper().startswith("ALL CHARGEABILITY")),
-            None
-        )
-        # fallback to the previous hardcoded name if not found
-        visa_col_name_t1 = match_col_t1 if match_col_t1 is not None else "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
-        visa_col_name_t2 = match_col_t2 if match_col_t2 is not None else "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
-        # "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
-        # "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
-    else:
-        visa_col_name_t1 = visa_country.upper()
-        visa_col_name_t2 = visa_country.upper()
+        def find_col(df):
+            default = "ALL CHARGEABILITY AREAS EXCEPT THOSE LISTED"
+            match = next((c for c in df.columns if str(c).startswith("ALL CHARGEABILITY")), None)
+            return match if match else default
 
-    print('visa_col_name_t1:', visa_col_name_t1, 'visa_col_name_t2:', visa_col_name_t2, 'visa_country:', visa_country, 't1data:\n', t1data, '\n---\n')
+        visa_col_name_t1 = find_col(t1data)
+        visa_col_name_t2 = find_col(t2data)
 
-    final_result = t1data.iloc[:, [0]]
+    # print('visa_col_name_t1:', visa_col_name_t1, 'visa_col_name_t2:',
+    #       visa_col_name_t2, 'visa_country:', visa_country, 't1data:\n', t1data, '\n---\n')
+
+    final_result = t1data.iloc[:, [0]].copy()
     final_result.insert(1, "Dates For Filing Visa Applications", t2data[visa_col_name_t2])
     final_result.insert(2, "Final Action Dates for Sponsored Preference Cases", t1data[visa_col_name_t1])
 
-    # set the second and third column values datatype as date with format as DD-MMM-YYYY
-    final_result.loc[:, "Dates For Filing Visa Applications"] = \
-        (final_result["Dates For Filing Visa Applications"]
-         .apply(lambda x: x
-            if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
-            else pd.to_datetime(x, format='%d%b%y', errors='coerce').strftime('%d-%b-%Y')
-            )
-         )
-
-    final_result.loc[:, "Final Action Dates for Sponsored Preference Cases"] = \
-        (final_result["Final Action Dates for Sponsored Preference Cases"].apply(
-        lambda x: x if pd.to_datetime(x, format='%d%b%y', errors='coerce') is pd.NaT
-        else pd.to_datetime(x, format='%d%b%y', errors='coerce')
-        .strftime('%d-%b-%Y')))
+    date_cols = ["Dates For Filing Visa Applications", "Final Action Dates for Sponsored Preference Cases"]
+    for col in date_cols:
+        final_result[col] = final_result[col].apply(_format_date_string)
 
     print(final_result)
     return final_result
+
 
 @timed_lru_cache(seconds=60*60*24, maxsize=32)
 def read_bulletin_section(bulletin_url: str, visa_type: str, visa_country: str) -> DataFrame | None:
