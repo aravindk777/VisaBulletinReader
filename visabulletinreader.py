@@ -154,13 +154,29 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
     t2data = t2data[1:]
 
     if visa_country.upper() == "OTHERS":
-        visa_country = "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
+        # find a column in both t1 and t2 data that starts with "ALL CHARGEABILITY"
+        match_col_t1 = next(
+            (col for col in t1data.columns if str(col).upper().startswith("ALL CHARGEABILITY")),
+            None
+        )
+        match_col_t2 = next(
+            (col for col in t2data.columns if str(col).upper().startswith("ALL CHARGEABILITY")),
+            None
+        )
+        # fallback to the previous hardcoded name if not found
+        visa_col_name_t1 = match_col_t1 if match_col_t1 is not None else "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
+        visa_col_name_t2 = match_col_t2 if match_col_t2 is not None else "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
+        # "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
+        # "ALL CHARGEABILITY AREAS EXCEPT  THOSE LISTED"
+    else:
+        visa_col_name_t1 = visa_country.upper()
+        visa_col_name_t2 = visa_country.upper()
+
+    print('visa_col_name_t1:', visa_col_name_t1, 'visa_col_name_t2:', visa_col_name_t2, 'visa_country:', visa_country, 't1data:\n', t1data, '\n---\n')
 
     final_result = t1data.iloc[:, [0]]
-    final_result.insert(1, "Dates For Filing Visa Applications",
-                        t2data[visa_country.upper()])
-    final_result.insert(2, "Final Action Dates for Sponsored Preference Cases",
-                        t1data[visa_country.upper()])
+    final_result.insert(1, "Dates For Filing Visa Applications", t2data[visa_col_name_t2])
+    final_result.insert(2, "Final Action Dates for Sponsored Preference Cases", t1data[visa_col_name_t1])
 
     # set the second and third column values datatype as date with format as DD-MMM-YYYY
     final_result.loc[:, "Dates For Filing Visa Applications"] = \
