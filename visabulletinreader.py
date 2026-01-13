@@ -190,10 +190,13 @@ def get_table_data(page: BeautifulSoup, search_text: str, visa_country: str) -> 
     #       visa_col_name_t2, 'visa_country:', visa_country, 't1data:\n', t1data, '\n---\n')
 
     final_result = t1data.iloc[:, [0]].copy()
-    final_result.insert(1, "Dates For Filing Visa Applications", t2data[visa_col_name_t2])
-    final_result.insert(2, "Final Action Dates for Sponsored Preference Cases", t1data[visa_col_name_t1])
+    final_result.insert(1, "Dates For Filing Visa Applications",
+                        t2data[visa_col_name_t2])
+    final_result.insert(2, "Final Action Dates for Sponsored Preference Cases",
+                        t1data[visa_col_name_t1])
 
-    date_cols = ["Dates For Filing Visa Applications", "Final Action Dates for Sponsored Preference Cases"]
+    date_cols = ["Dates For Filing Visa Applications",
+                 "Final Action Dates for Sponsored Preference Cases"]
     for col in date_cols:
         final_result[col] = final_result[col].apply(_format_date_string)
 
